@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Калькулятор цін для менеджера</title>
+    <style>
+        /* Общие стили */
+        body {
+            font-family: sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 10px;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+
+        /* Глобальные параметры */
+        .global-params {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 10px;
+        }
+
+        .form-group.inline-flex {
+            flex-direction: row;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-group.inline-flex input {
+            flex-grow: 1;
+        }
+
+        .form-group.inline-flex select {
+            width: 100px;
+            font-size: 0.9em;
+        }
+
+
+        .form-group label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #555;
+            font-size: 0.9em;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.9em;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        /* Сетка карточек культур */
+        .crop-calculators-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .crop-card {
+            background-color: #f9f9f9;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            border: 1px solid #eee;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .crop-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .crop-card h2 {
+            text-align: center;
+            color: #34495e;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+
+        /* Сворачивающиеся секции */
+        .collapsible-header {
+            background-color: #ecf0f1;
+            color: #2c3e50;
+            cursor: pointer;
+            padding: 10px;
+            width: 100%;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 1em;
+            font-weight: bold;
+            border-radius: 6px;
+            margin-top: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.2s;
+        }
+
+        .collapsible-header:hover {
+            background-color: #dce1e3;
+        }
+
+        .arrow {
+            font-size: 1em;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .collapsible-content {
+            padding: 0 10px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease-out;
+            background-color: #fff;
+            border-radius: 0 0 8px 8px;
+        }
+
+        /* Результаты */
+        .result {
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+            text-align: center;
+        }
+
+        .result p {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #27ae60;
+            margin: 5px 0;
+        }
+
+        .result h4 {
+            margin-top: 15px;
+            color: #777;
+            font-size: 1em;
+        }
+
+        .result .discounts-result {
+            font-size: 1em;
+            font-weight: normal;
+            color: #c0392b;
+        }
+
+        .section-title {
+            font-size: 1em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 15px 0 8px 0;
+            padding-left: 5px;
+            border-left: 4px solid #3498db;
+        }
+
+        /* Адаптивный дизайн */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            h1 {
+                font-size: 1.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Калькулятор цін для менеджера</h1>
+
+    <div class="global-params">
+        <div class="form-group">
+            <label for="region">Район</label>
+            <input type="text" id="region" placeholder="Напр. Одеський">
+        </div>
+        <div class="form-group">
+            <label for="port">Порт</label>
+            <input type="text" id="port" placeholder="Напр. Чорноморськ">
+        </div>
+        <div class="form-group">
+            <label for="exchangeRate">Курс долара</label>
+            <input type="number" id="exchangeRate" placeholder="Напр. 41.5" value="41.5" oninput="calculateAll()">
+        </div>
+    </div>
+
+    <div class="crop-calculators-grid">
+
+        <!-- ПШЕНИЦЯ 2 КЛАС -->
+        <div class="crop-card" id="wheat-2">
+            <h2>Пшениця 2 клас</h2>
+            <div class="form-group">
+                <label for="basePrice-wheat-2">Базисна ціна</label>
+                <div class="inline-flex form-group">
+                    <input type="number" id="basePrice-wheat-2" placeholder="Напр. 180" oninput="calculate('wheat-2')">
+                    <select id="currencySelect-wheat-2" onchange="calculate('wheat-2')">
+                        <option value="USD">$</option>
+                        <option value="UAH">грн</option>
+                    </select>
+                </div>
+            </div>
+
+            <h3 class="section-title">Транспорт та Маржа</h3>
+            <div class="transport-margin-section">
+                <div class="form-group">
+                    <label for="transportCost-wheat-2">Вартість транспорту (грн/т)</label>
+                    <input type="number" id="transportCost-wheat-2" placeholder="Напр. 800" oninput="calculate('wheat-2')">
+                </div>
+                <div class="form-group">
+                    <label for="margin-wheat-2">Маржа (грн/т)</label>
+                    <input type="number" id="margin-wheat-2" placeholder="Напр. 100" oninput="calculate('wheat-2')">
+                </div>
+            </div>
+
+            <div class="collapsible-header" onclick="toggleCollapsible('discounts-wheat-2')">
+                Розрахунок дисконтів <span class="arrow">→</span>
+            </div>
+            <div id="discounts-wheat-2" class="collapsible-content">
+                <div class="form-group">
+                    <label for="moisture-wheat-2">Вологість (%) [базис 14%]</label>
+                    <input type="number" id="moisture-wheat-2" placeholder="Напр. 15" oninput="calculate('wheat-2')">
+                </div>
+                <div class="form-group">
+                    <label for="foreignMatter-wheat-2">Сміттєва домішка (%) [базис 2%]</label>
+                    <input type="number" id="foreignMatter-wheat-2" placeholder="Напр. 3" oninput="calculate('wheat-2')">
+                </div>
+                <div class="form-group">
+                    <label for="protein-wheat-2">Протеїн (%) [базис 13.5%]</label>
+                    <input type="number" id="protein-wheat-2" placeholder="Напр. 13" oninput="calculate('wheat-2')">
+                </div>
+                <div class="form-group">
+                    <label for="dryingCost-wheat-2">Вартість сушіння (грн за 1% вологи)</label>
+                    <input type="number" id="dryingCost-wheat-2" placeholder="Напр. 80" value="80" oninput="calculate('wheat-2')">
+                </div>
+                <div class="form-group">
+                    <label for="cleaningCost-wheat-2">Вартість очищення (грн за 1% сміттєвої домішки)</label>
+                    <input type="number" id="cleaningCost-wheat-2" placeholder="Напр. 5" value="5" oninput="calculate('wheat-2')">
+                </div>
+            </div>
+
+            <div class="result" id="result-wheat-2">
+                <p id="price-wheat-2">0.00 грн</p>
+                <h4>Дисконти: </h4>
+                <p id="discounts-wheat-2-result" class="discounts-result">0.00 грн</p>
+            </div>
+        </div>
+
+        <!-- ПШЕНИЦЯ 3 КЛАС -->
+        <div class="crop-card" id="wheat-3">
+            <h2>Пшениця 3 клас</h2>
+            <div class="form-group">
+                <label for="basePrice-wheat-3">Базисна ціна</label>
+                <div class="inline-flex form-group">
+                    <input type="number" id="basePrice-wheat-3" placeholder="Напр. 170" oninput="calculate('wheat-3')">
+                    <select id="currencySelect-wheat-3" onchange="calculate('wheat-3')">
+                        <option value="USD">$</option>
+                        <option value="UAH">грн</option>
+                    </select>
+                </div>
+            </div>
+
+            <h3 class="section-title">Транспорт та Маржа</h3>
+            <div class="transport-margin-section">
+                <div class="form-group">
+                    <label for="transportCost-wheat-3">Вартість транспорту (грн/т)</label>
+                    <input type="number" id="transportCost-wheat-3" placeholder="Напр. 800" oninput="calculate('wheat-3')">
+                </div>
+                <div class="form-group">
+                    <label for="margin-wheat-3">Маржа (грн/т)</label>
+                    <input type="number" id="margin-wheat-3" placeholder="Напр. 100" oninput="calculate('wheat-3')">
+                </div>
+            </div>
+
+            <div class="collapsible-header" onclick="toggleCollapsible('discounts-wheat-3')">
+                Розрахунок дисконтів <span class="arrow">→</span>
+            </div>
+            <div id="discounts-wheat-3" class="collapsible-content">
+                <div class="form-group">
+                    <label for="moisture-wheat-3">Вологість (%) [базис 14%]</label>
+                    <input type="number" id="moisture-wheat-3" placeholder="Напр. 15" oninput="calculate('wheat-3')">
+                </div>
+                <div class="form-group">
+                    <label for="foreignMatter-wheat-3">Сміттєва домішка (%) [базис 2%]</label>
+                    <input type="number" id="foreignMatter-wheat-3" placeholder="Напр. 3" oninput="calculate('wheat-3')">
+                </div>
+                <div class="form-group">
+                    <label for="protein-wheat-3">Протеїн (%) [базис 12.5%]</label>
+                    <input type="number" id="protein-wheat-3" placeholder="Напр. 12" oninput="calculate('wheat-3')">
+                </div>
+                <div class="form-group">
+                    <label for="dryingCost-wheat-3">Вартість сушіння (грн за 1% вологи)</label>
+                    <input type="number" id="dryingCost-wheat-3" placeholder="Напр. 80" value="80" oninput="calculate('wheat-3')">
+                </div>
+                <div class="form-group">
+                    <label for="cleaningCost-wheat-3">Вартість очищення (грн за 1% сміттєвої домішки)</label>
+                    <input type="number" id="cleaningCost-wheat-3" placeholder="Напр. 5" value="5" oninput="calculate('wheat-3')">
+                </div>
+            </div>
+
+            <div class="result" id="result-wheat-3">
+                <p id="price-wheat-3">0.00 грн</p>
+                <h4>Дисконти: </h4>
+                <p id="discounts-wheat-3-result" class="discounts-result">0.00 грн</p>
+            </div>
+        </div>
+
+        <!-- ПШЕНИЦЯ 4 КЛАС -->
+        <div class="crop-card" id="wheat-4">
+            <h2>Пшениця 4 клас</h2>
+            <div class="form-group">
+                <label for="basePrice-wheat-4">Базисна ціна</label>
+                <div class="inline-flex form-group">
+                    <input type="number" id="basePrice-wheat-4" placeholder="Напр. 150" oninput="calculate('wheat-4')">
+                    <select id="currencySelect-wheat-4" onchange="calculate('wheat-4')">
+                        <option value="USD">$</option>
+                        <option value="UAH">грн</option>
+                    </select>
+                </div>
+            </div>
+
+            <h3 class="section-title">Транспорт та Маржа</h3>
+            <div class="transport-margin-section">
+                <div class="form-group">
+                    <label for="transportCost-wheat-4">Вартість транспорту (грн/т)</label>
+                    <input type="number" id="transportCost-wheat-4" placeholder="Напр. 800" oninput="calculate('wheat-4')">
+                </div>
+                <div class="form-group">
+                    <label for="margin-wheat-4">Маржа (грн/т)</label>
+                    <input type="number" id="margin-wheat-4" placeholder="Напр. 100" oninput="calculate('wheat-4')">
+                </div>
+            </div>
+
+            <div class="collapsible-header" onclick="toggleCollapsible('discounts-wheat-4')">
+                Розрахунок дисконтів <span class="arrow">→</span>
+            </div>
+            <div id="discounts-wheat-4" class="collapsible-content">
+                <div class="form-group">
+                    <label for="moisture-wheat-4">Вологість (%) [базис 14%]</label>
+                    <input type="number" id="moisture-wheat-4" placeholder="Напр. 15" oninput="calculate('wheat-4')">
+                </div>
+                <div class="form-group">
+                    <label for="foreignMatter-wheat-4">Сміттєва домішка (%) [базис 2%]</label>
+                    <input type="number" id="foreignMatter-wheat-4" placeholder="Напр. 3" oninput="calculate('wheat-4')">
+                </div>
+                <div class="form-group">
+                    <label for="protein-wheat-4">Протеїн (%) [базис 11.5%]</label>
+                    <input type="number" id="protein-wheat-4" placeholder="Напр. 11" oninput="calculate('wheat-4')">
+                </div>
+                <div class="form-group">
+                    <label for="dryingCost-wheat-4">Вартість сушіння (грн за 1% вологи)</label>
+                    <input type="number" id="dryingCost-wheat-4" placeholder="Напр. 80" value="80" oninput="calculate('wheat-4')">
+                </div>
+                <div class="form-group">
+                    <label for="cleaningCost-wheat-4">Вартість очищення (грн за 1% сміттєвої домішки)</label>
+                    <input type="number" id="cleaningCost-wheat-4" placeholder="Напр. 5" value="5" oninput="calculate('wheat-4')">
+                </div>
+            </div>
+
+            <div class="result" id="result-wheat-4">
+                <p id="price-wheat-4">0.00 грн</p>
+                <h4>Дисконти: </h4>
+                <p id="discounts-wheat-4-result" class="discounts-result">0.00 грн</p>
+            </div>
+        </div>
+
+        <!-- СОНЯШНИК -->
+        <div class="crop-card" id="sunflower">
+            <h2>Соняшник</h2>
+            <div class="form-group">
+                <label for="basePrice-sunflower">Базисна ціна</label>
+                <div class="inline-flex form-group">
+                    <input type="number" id="basePrice-sunflower" placeholder="Напр. 400" oninput="calculate('sunflower')">
+                    <select id="currencySelect-sunflower" onchange="calculate('sunflower')">
+                        <option value="USD">$</option>
+                        <option value="UAH">грн</option>
+                    </select>
+                </div>
+            </div>
+
+            <h3 class="section-title">Транспорт та Маржа</h3>
+            <div class="transport-margin-section">
+                <div class="form-group">
+                    <label for="transportCost-sunflower">Вартість транспорту (грн/т)</label>
+                    <input type="number" id="transportCost-sunflower" placeholder="Напр. 800" oninput="calculate('sunflower')">
+                </div>
+                <div class="form-group">
+                    <label for="margin-sunflower">Маржа (грн/т)</label>
+                    <input type="number" id="margin-sunflower" placeholder="Напр. 100" oninput="calculate('sunflower')">
+                </div>
+            </div>
+
+            <div class="collapsible-header" onclick="toggleCollapsible('discounts-sunflower')">
+                Розрахунок дисконтів <span class="arrow">→</span>
+            </div>
+            <div id="discounts-sunflower" class="collapsible-content">
+                <div class="form-group">
+                    <label for="moisture-sunflower">Вологість (%) [базис 7%]</label>
+                    <input type="number" id="moisture-sunflower" placeholder="Напр. 8.5" oninput="calculate('sunflower')">
+                </div>
+                <div class="form-group">
+                    <label for="foreignMatter-sunflower">Сміттєва домішка (%) [базис 3%]</label>
+                    <input type="number" id="foreignMatter-sunflower" placeholder="Напр. 4.2" oninput="calculate('sunflower')">
+                </div>
+                <div class="form-group">
+                    <label for="oilContent-sunflower">Олійність (%) [базис 48%]</label>
+                    <input type="number" id="oilContent-sunflower" placeholder="Напр. 46" oninput="calculate('sunflower')">
+                </div>
+                <div class="form-group">
+                    <label for="dryingCost-sunflower">Вартість сушіння (грн за 1% вологи)</label>
+                    <input type="number" id="dryingCost-sunflower" placeholder="Напр. 80" value="80" oninput="calculate('sunflower')">
+                </div>
+                <div class="form-group">
+                    <label for="cleaningCost-sunflower">Вартість очищення (грн за 1% сміттєвої домішки)</label>
+                    <input type="number" id="cleaningCost-sunflower" placeholder="Напр. 5" value="5" oninput="calculate('sunflower')">
+                </div>
+            </div>
+
+            <div class="result" id="result-sunflower">
+                <p id="price-sunflower">0.00 грн</p>
+                <h4>Дисконти: </h4>
+                <p id="discounts-sunflower-result" class="discounts-result">0.00 грн</p>
+            </div>
+        </div>
+
+        <!-- СОЯ -->
+        <div class="crop-card" id="soy">
+            <h2>Соя</h2>
+            <div class="form-group">
+                <label for="basePrice-soy">Базисна ціна</label>
+                <div class="inline-flex form-group">
+                    <input type="number" id="basePrice-soy" placeholder="Напр. 350" oninput="calculate('soy')">
+                    <select id="currencySelect-soy" onchange="calculate('soy')">
+                        <option value="USD">$</option>
+                        <option value="UAH">грн</option>
+                    </select>
+                </div>
+            </div>
+
+            <h3 class="section-title">Транспорт та Маржа</h3>
+            <div class="transport-margin-section">
+                <div class="form-group">
+                    <label for="transportCost-soy">Вартість транспорту (грн/т)</label>
+                    <input type="number" id="transportCost-soy" placeholder="Напр. 800" oninput="calculate('soy')">
+                </div>
+                <div class="form-group">
+                    <label for="margin-soy">Маржа (грн/т)</label>
+                    <input type="number" id="margin-soy" placeholder="Напр. 100" oninput="calculate('soy')">
+                </div>
+            </div>
+
+            <div class="collapsible-header" onclick="toggleCollapsible('discounts-soy')">
+                Розрахунок дисконтів <span class="arrow">→</span>
+            </div>
+            <div id="discounts-soy" class="collapsible-content">
+                <div class="form-group">
+                    <label for="moisture-soy">Вологість (%) [базис 12%]</label>
+                    <input type="number" id="moisture-soy" placeholder="Напр. 13" oninput="calculate('soy')">
+                </div>
+                <div class="form-group">
+                    <label for="foreignMatter-soy">Сміттєва домішка (%) [базис 2%]</label>
+                    <input type="number" id="foreignMatter-soy" placeholder="Напр. 2.5" oninput="calculate('soy')">
+                </div>
+                <div class="form-group">
+                    <label for="dryingCost-soy">Вартість сушіння (грн за 1% вологи)</label>
+                    <input type="number" id="dryingCost-soy" placeholder="Напр. 80" value="80" oninput="calculate('soy')">
+                </div>
+                <div class="form-group">
+                    <label for="cleaningCost-soy">Вартість очищення (грн за 1% сміттєвої домішки)</label>
+                    <input type="number" id="cleaningCost-soy" placeholder="Напр. 5" value="5" oninput="calculate('soy')">
+                </div>
+            </div>
+
+            <div class="result" id="result-soy">
+                <p id="price-soy">0.00 грн</p>
+                <h4>Дисконти: </h4>
+                <p id="discounts-soy-result" class="discounts-result">0.00 грн</p>
+            </div>
+        </div>
+
+        <!-- КУКУРУДЗА -->
+        <div class="crop-card" id="corn">
+            <h2>Кукурудза</h2>
+            <div class="form-group">
+                <label for="basePrice-corn">Базисна ціна</label>
+                <div class="inline-flex form-group">
+                    <input type="number" id="basePrice-corn" placeholder="Напр. 180" oninput="calculate('corn')">
+                    <select id="currencySelect-corn" onchange="calculate('corn')">
+                        <option value="USD">$</option>
+                        <option value="UAH">грн</option>
+                    </select>
+                </div>
+            </div>
+
+            <h3 class="section-title">Транспорт та Маржа</h3>
+            <div class="transport-margin-section">
+                <div class="form-group">
+                    <label for="transportCost-corn">Вартість транспорту (грн/т)</label>
+                    <input type="number" id="transportCost-corn" placeholder="Напр. 800" oninput="calculate('corn')">
+                </div>
+                <div class="form-group">
+                    <label for="margin-corn">Маржа (грн/т)</label>
+                    <input type="number" id="margin-corn" placeholder="Напр. 100" oninput="calculate('corn')">
+                </div>
+            </div>
+
+            <div class="collapsible-header" onclick="toggleCollapsible('discounts-corn')">
+                Розрахунок дисконтів <span class="arrow">→</span>
+            </div>
+            <div id="discounts-corn" class="collapsible-content">
+                <div class="form-group">
+                    <label for="moisture-corn">Вологість (%) [базис 14%]</label>
+                    <input type="number" id="moisture-corn" placeholder="Напр. 16" oninput="calculate('corn')">
+                </div>
+                <div class="form-group">
+                    <label for="foreignMatter-corn">Сміттєва домішка (%) [базис 2%]</label>
+                    <input type="number" id="foreignMatter-corn" placeholder="Напр. 3.5" oninput="calculate('corn')">
+                </div>
+                <div class="form-group">
+                    <label for="dryingCost-corn">Вартість сушіння (грн за 1% вологи)</label>
+                    <input type="number" id="dryingCost-corn" placeholder="Напр. 80" value="80" oninput="calculate('corn')">
+                </div>
+                <div class="form-group">
+                    <label for="cleaningCost-corn">Вартість очищення (грн за 1% сміттєвої домішки)</label>
+                    <input type="number" id="cleaningCost-corn" placeholder="Напр. 5" value="5" oninput="calculate('corn')">
+                </div>
+            </div>
+
+            <div class="result" id="result-corn">
+                <p id="price-corn">0.00 грн</p>
+                <h4>Дисконти: </h4>
+                <p id="discounts-corn-result" class="discounts-result">0.00 грн</p>
+            </div>
+        </div>
+
+        <!-- ЯЧМІНЬ -->
+        <div class="crop-card" id="barley">
+            <h2>Ячмінь</h2>
+            <div class="form-group">
+                <label for="basePrice-barley">Базисна ціна</label>
+                <div class="inline-flex form-group">
+                    <input type="number" id="basePrice-barley" placeholder="Напр. 140" oninput="calculate('barley')">
+                    <select id="currencySelect-barley" onchange="calculate('barley')">
+                        <option value="USD">$</option>
+                        <option value="UAH">грн</option>
+                    </select>
+                </div>
+            </div>
+
+            <h3 class="section-title">Транспорт та Маржа</h3>
+            <div class="transport-margin-section">
+                <div class="form-group">
+                    <label for="transportCost-barley">Вартість транспорту (грн/т)</label>
+                    <input type="number" id="transportCost-barley" placeholder="Напр. 800" oninput="calculate('barley')">
+                </div>
+                <div class="form-group">
+                    <label for="margin-barley">Маржа (грн/т)</label>
+                    <input type="number" id="margin-barley" placeholder="Напр. 100" oninput="calculate('barley')">
+                </div>
+            </div>
+
+            <div class="collapsible-header" onclick="toggleCollapsible('discounts-barley')">
+                Розрахунок дисконтів <span class="arrow">→</span>
+            </div>
+            <div id="discounts-barley" class="collapsible-content">
+                <div class="form-group">
+                    <label for="moisture-barley">Вологість (%) [базис 14%]</label>
+                    <input type="number" id="moisture-barley" placeholder="Напр. 15.5" oninput="calculate('barley')">
+                </div>
+                <div class="form-group">
+                    <label for="foreignMatter-barley">Сміттєва домішка (%) [базис 2%]</label>
+                    <input type="number" id="foreignMatter-barley" placeholder="Напр. 3" oninput="calculate('barley')">
+                </div>
+                <div class="form-group">
+                    <label for="dryingCost-barley">Вартість сушіння (грн за 1% вологи)</label>
+                    <input type="number" id="dryingCost-barley" placeholder="Напр. 80" value="80" oninput="calculate('barley')">
+                </div>
+                <div class="form-group">
+                    <label for="cleaningCost-barley">Вартість очищення (грн за 1% сміттєвої домішки)</label>
+                    <input type="number" id="cleaningCost-barley" placeholder="Напр. 5" value="5" oninput="calculate('barley')">
+                </div>
+            </div>
+
+            <div class="result" id="result-barley">
+                <p id="price-barley">0.00 грн</p>
+                <h4>Дисконти: </h4>
+                <p id="discounts-barley-result" class="discounts-result">0.00 грн</p>
+            </div>
+        </div>
+
+        <!-- РІПАК -->
+        <div class="crop-card" id="rapeseed">
+            <h2>Ріпак</h2>
+            <div class="form-group">
+                <label for="basePrice-rapeseed">Базисна ціна</label>
+                <div class="inline-flex form-group">
+                    <input type="number" id="basePrice-rapeseed" placeholder="Напр. 420" oninput="calculate('rapeseed')">
+                    <select id="currencySelect-rapeseed" onchange="calculate('rapeseed')">
+                        <option value="USD">$</option>
+                        <option value="UAH">грн</option>
+                    </select>
+                </div>
+            </div>
+
+            <h3 class="section-title">Транспорт та Маржа</h3>
+            <div class="transport-margin-section">
+                <div class="form-group">
+                    <label for="transportCost-rapeseed">Вартість транспорту (грн/т)</label>
+                    <input type="number" id="transportCost-rapeseed" placeholder="Напр. 800" oninput="calculate('rapeseed')">
+                </div>
+                <div class="form-group">
+                    <label for="margin-rapeseed">Маржа (грн/т)</label>
+                    <input type="number" id="margin-rapeseed" placeholder="Напр. 100" oninput="calculate('rapeseed')">
+                </div>
+            </div>
+
+            <div class="collapsible-header" onclick="toggleCollapsible('discounts-rapeseed')">
+                Розрахунок дисконтів <span class="arrow">→</span>
+            </div>
+            <div id="discounts-rapeseed" class="collapsible-content">
+                <div class="form-group">
+                    <label for="moisture-rapeseed">Вологість (%) [базис 8%]</label>
+                    <input type="number" id="moisture-rapeseed" placeholder="Напр. 9" oninput="calculate('rapeseed')">
+                </div>
+                <div class="form-group">
+                    <label for="foreignMatter-rapeseed">Сміттєва домішка (%) [базис 2%]</label>
+                    <input type="number" id="foreignMatter-rapeseed" placeholder="Напр. 3.2" oninput="calculate('rapeseed')">
+                </div>
+                <div class="form-group">
+                    <label for="oilContent-rapeseed">Олійність (%) [базис 42%]</label>
+                    <input type="number" id="oilContent-rapeseed" placeholder="Напр. 40" oninput="calculate('rapeseed')">
+                </div>
+                <div class="form-group">
+                    <label for="dryingCost-rapeseed">Вартість сушіння (грн за 1% вологи)</label>
+                    <input type="number" id="dryingCost-rapeseed" placeholder="Напр. 80" value="80" oninput="calculate('rapeseed')">
+                </div>
+                <div class="form-group">
+                    <label for="cleaningCost-rapeseed">Вартість очищення (грн за 1% сміттєвої домішки)</label>
+                    <input type="number" id="cleaningCost-rapeseed" placeholder="Напр. 5" value="5" oninput="calculate('rapeseed')">
+                </div>
+            </div>
+
+            <div class="result" id="result-rapeseed">
+                <p id="price-rapeseed">0.00 грн</p>
+                <h4>Дисконти: </h4>
+                <p id="discounts-rapeseed-result" class="discounts-result">0.00 грн</p>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // Объект с данными по базисным нормам и дисконтам (можно расширять)
+    const cropData = {
+        'wheat-2': {
+            moistureBase: 14,
+            foreignMatterBase: 2,
+            proteinBase: 13.5
+        },
+        'wheat-3': {
+            moistureBase: 14,
+            foreignMatterBase: 2,
+            proteinBase: 12.5
+        },
+        'wheat-4': {
+            moistureBase: 14,
+            foreignMatterBase: 2,
+            proteinBase: 11.5
+        },
+        'sunflower': {
+            moistureBase: 7,
+            foreignMatterBase: 3,
+            oilContentBase: 48
+        },
+        'soy': {
+            moistureBase: 12,
+            foreignMatterBase: 2
+        },
+        'corn': {
+            moistureBase: 14,
+            foreignMatterBase: 2
+        },
+        'barley': {
+            moistureBase: 14,
+            foreignMatterBase: 2
+        },
+        'rapeseed': {
+            moistureBase: 8,
+            foreignMatterBase: 2,
+            oilContentBase: 42
+        }
+    };
+
+    /**
+     * Переключает видимость сворачивающихся секций
+     * @param {string} id - ID секции для переключения
+     */
+    function toggleCollapsible(id) {
+        const content = document.getElementById(id);
+        const header = content.previousElementSibling;
+        const arrow = header.querySelector('.arrow');
+
+        if (content.style.maxHeight) {
+            content.style.maxHeight = null;
+            arrow.style.transform = 'rotate(0deg)';
+        } else {
+            content.style.maxHeight = content.scrollHeight + 'px';
+            arrow.style.transform = 'rotate(90deg)';
+        }
+    }
+
+    /**
+     * Вычисляет финальную цену для одной культуры
+     * @param {string} crop - ID культуры (например, 'wheat-4')
+     */
+    function calculate(crop) {
+        // Получение значений из полей ввода
+        const basePrice = parseFloat(document.getElementById(`basePrice-${crop}`).value) || 0;
+        const exchangeRate = parseFloat(document.getElementById('exchangeRate').value) || 0;
+        
+        // Получение валюты для текущей культуры
+        const currencySelect = document.getElementById(`currencySelect-${crop}`);
+        const selectedCurrency = currencySelect.value;
+
+        // Определение базовой цены в UAH
+        let basePriceUAH = 0;
+        if (selectedCurrency === 'USD') {
+            basePriceUAH = basePrice * exchangeRate;
+        } else {
+            basePriceUAH = basePrice;
+        }
+        
+        // Получение значений дисконтов, транспорта и маржи
+        const moisture = parseFloat(document.getElementById(`moisture-${crop}`).value) || cropData[crop].moistureBase;
+        const foreignMatter = parseFloat(document.getElementById(`foreignMatter-${crop}`).value) || cropData[crop].foreignMatterBase;
+        const dryingCost = parseFloat(document.getElementById(`dryingCost-${crop}`).value) || 0;
+        const cleaningCost = parseFloat(document.getElementById(`cleaningCost-${crop}`).value) || 0;
+        const transportCost = parseFloat(document.getElementById(`transportCost-${crop}`).value) || 0;
+        const margin = parseFloat(document.getElementById(`margin-${crop}`).value) || 0;
+
+        // Расчет дисконтов
+        let discounts = 0;
+        if (moisture > cropData[crop].moistureBase) {
+            const moisturePenalty = (moisture - cropData[crop].moistureBase) * dryingCost;
+            discounts += moisturePenalty;
+        }
+        if (foreignMatter > cropData[crop].foreignMatterBase) {
+            const foreignMatterPenalty = (foreignMatter - cropData[crop].foreignMatterBase) * cleaningCost;
+            discounts += foreignMatterPenalty;
+        }
+
+        // Дополнительные дисконты для пшеницы (на протеин)
+        if (crop.includes('wheat')) {
+            const protein = parseFloat(document.getElementById(`protein-${crop}`).value) || cropData[crop].proteinBase;
+            if (protein < cropData[crop].proteinBase) {
+                const proteinPenalty = (cropData[crop].proteinBase - protein) * 50; // 50 грн за 1%
+                discounts += proteinPenalty;
+            }
+        }
+        
+        // Дополнительные дисконты для соняшника и ріпаку (на олійність)
+        if (crop === 'sunflower' || crop === 'rapeseed') {
+            const oilContent = parseFloat(document.getElementById(`oilContent-${crop}`).value) || cropData[crop].oilContentBase;
+            if (oilContent < cropData[crop].oilContentBase) {
+                const oilContentPenalty = (cropData[crop].oilContentBase - oilContent) * 10; // 10 грн за 1%
+                discounts += oilContentPenalty;
+            }
+        }
+
+        // Расчет финальной цены в гривнах
+        const finalPrice = basePriceUAH - discounts - transportCost - margin;
+
+        // Обновление результатов на странице
+        document.getElementById(`price-${crop}`).textContent = `${finalPrice.toFixed(2)} грн`;
+        document.getElementById(`discounts-${crop}-result`).textContent = `${discounts.toFixed(2)} грн`;
+    }
+
+    /**
+     * Запускает расчет для всех культур
+     */
+    function calculateAll() {
+        const cropIds = Object.keys(cropData);
+        cropIds.forEach(crop => calculate(crop));
+    }
+
+    // Первоначальный расчет при загрузке страницы
+    window.onload = function() {
+        calculateAll();
+    };
+</script>
+
+</body>
+</html>
